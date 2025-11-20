@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>App Aceites</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    padding: 20px;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .card h2 {
+    margin-top: 0;
+    font-size: 18px;
+    color: #234;
+  }
+  .row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    flex: 1;
+  }
+  label {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 4px;
+  }
+  input, select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #c5ccd8;
+    font-size: 13px;
+  }
+  button {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    background: #1976d2;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 8px;
+  }
+  button.secondary {
+    background: #9e9e9e;
+  }
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  .results-table th, .results-table td {
+    border: 1px solid #e0e0e0;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  .results-table th {
+    background: #f0f2f5;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>App Aceites</h2>
+    <div class="row">
+      <div class="field">
+        <label for="modelo">Modelo</label>
+        <select id="modelo"></select>
+      </div>
+      <div class="field">
+        <label for="prefijoMotor">Prefijo chasis / Motor</label>
+        <select id="prefijoMotor"></select>
+      </div>
+      <div class="field">
+        <label for="chasis">N° de chasis (solo números)</label>
+        <input type="number" id="chasis" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="caja">Caja</label>
+        <select id="caja"></select>
+      </div>
+      <div class="field">
+        <label for="diferencial">Diferencial</label>
+        <select id="diferencial"></select>
+      </div>
+    </div>
+    <div class="row">
+      <button onclick="buscar()">Buscar aceites</button>
+      <button class="secondary" onclick="limpiar()">Limpiar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Resultados</h2>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Conjunto</th>
+          <th>Spec</th>
+          <th>Viscosidad</th>
+          <th>Litros</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Motor</td>
+          <td id="motSpec"></td>
+          <td id="motVisc"></td>
+          <td id="motLit"></td>
+        </tr>
+        <tr>
+          <td>Caja</td>
+          <td id="cajaSpec"></td>
+          <td id="cajaVisc"></td>
+          <td id="cajaLit"></td>
+        </tr>
+        <tr>
+          <td>Diferencial</td>
+          <td id="difSpec"></td>
+          <td id="difVisc"></td>
+          <td id="difLit"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<script>
+  const RULES_MOTOR = [{"Modelo": "F", "EngineFamily": NaN, "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": "E", "ChNum_Desde": NaN, "ChNum_Hasta": 865838.0, "OilSpecCode": "VDS-3", "Viscosidad": "15W40", "Litros": 37, "SKU (opcional)": NaN, "Prioridad": 10.0, "Notas": "Línea F hasta E865838 → VDS-3", "coincide?": false}, {"Modelo": "F", "EngineFamily": NaN, "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": "E", "ChNum_Desde": 865839.0, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-4.5", "Viscosidad": "10W30", "Litros": 37, "SKU (opcional)": NaN, "Prioridad": 10.0, "Notas": "Línea F desde E865839 → VDS-4.5", "coincide?": false}, {"Modelo": "VM MWM", "EngineFamily": NaN, "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": "*", "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-3", "Viscosidad": "15W40", "Litros": 25, "SKU (opcional)": NaN, "Prioridad": 12.0, "Notas": "VM Euro3 → VDS-3 (sin depender de chasis)", "coincide?": false}, {"Modelo": "VM VOLVO", "EngineFamily": NaN, "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": "*", "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-4.5", "Viscosidad": "10W30", "Litros": 24, "SKU (opcional)": NaN, "Prioridad": 12.0, "Notas": "VM Euro5 → VDS-4.5 (sin depender de chasis)", "coincide?": false}, {"Modelo": "*", "EngineFamily": "D8C", "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": "*", "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-4,5", "Viscosidad": "10W30", "Litros": 33, "SKU (opcional)": NaN, "Prioridad": 8.0, "Notas": "Buses D8C → completar spec/litros reales", "coincide?": false}, {"Modelo": "*", "EngineFamily": "D11C", "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": NaN, "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-4,6", "Viscosidad": "10W31", "Litros": 40, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "coincide?": false}, {"Modelo": "*", "EngineFamily": "D11A", "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": NaN, "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-3", "Viscosidad": "15W40", "Litros": 40, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "coincide?": false}, {"Modelo": "*", "EngineFamily": "D7E", "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": NaN, "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-3", "Viscosidad": "15W40", "Litros": 30, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "coincide?": true}, {"Modelo": "*", "EngineFamily": "D9A", "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": NaN, "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-3", "Viscosidad": "15W40", "Litros": 40, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "coincide?": false}, {"Modelo": "*", "EngineFamily": "D7FB/260", "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": NaN, "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-3", "Viscosidad": "15W40", "Litros": 23, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "coincide?": false}, {"Modelo": "*", "EngineFamily": "D7FB/270", "Euro": NaN, "Pais/Mercado": NaN, "AnoDesde": NaN, "AnoHasta": NaN, "ChassisPrefix": NaN, "ChNum_Desde": NaN, "ChNum_Hasta": NaN, "OilSpecCode": "VDS-3", "Viscosidad": "15W40", "Litros": 25, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "coincide?": false}];
+  const RULES_CAJA = [{"CajaCode": "AT2612D", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136284, "Viscosidad": "Sintético 75w90", "Litros": 16.0, "SKU (opcional)": NaN, "Prioridad": 10.0, "Notas": "AT2612D → sintético 16L", "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "VT2514B", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 8291016, "Viscosidad": "SAE 40", "Litros": 13.5, "SKU (opcional)": NaN, "Prioridad": 10.0, "Notas": "VT2514B → SAE 40 13.5L", "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "AT2612F", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136284, "Viscosidad": "Sintético 75w90", "Litros": 16.0, "SKU (opcional)": NaN, "Prioridad": 10.0, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "AT2612G", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136284, "Viscosidad": "Sintético 75w90", "Litros": 16.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "AT2612FULC", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136284, "Viscosidad": "Sintético 75w90", "Litros": 17.5, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "VT2214B", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 8291016, "Viscosidad": "SAE 40", "Litros": 13.5, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "RET-TH/VR3250", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136277, "Viscosidad": "SINTETICO", "Litros": 5.5, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "F07606A", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 8291016, "Viscosidad": "SAE 40", "Litros": 8.4, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "F09506B", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 8291016, "Viscosidad": "SAE 40", "Litros": 8.4, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "F0095506A", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 8291016, "Viscosidad": "SAE 40", "Litros": 8.4, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "F1109", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 8291016, "Viscosidad": "SAE 40", "Litros": 8.5, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "F16108LL", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 8291016, "Viscosidad": "SAE 40", "Litros": 15.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "D854-6", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136284, "Viscosidad": "Sintético 75w90", "Litros": 31.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "6AP1200C", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136284, "Viscosidad": "Sintético 75w90", "Litros": 24.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": false}, {"CajaCode": "AT2412C", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 8291016, "Viscosidad": "SAE 40", "Litros": 9.2, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": NaN, "Desde CH": NaN, "Hasta ch": NaN, "coincide?": true}];
+  const RULES_DIF = [{"DiffCode": "RSS1360", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 14.5, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RTS2370", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 14.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RTH3210", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 22.5, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RTH3212", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 26.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RT3210HV", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 26.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": true}, {"DiffCode": "RSS1045", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 21.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RSS1035A", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75W90", "Litros": 20.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RS1228C", "Modelo (opcional)": "B8R", "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 15.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RS1228C", "Modelo (opcional)": "B11R", "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 15.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RS1228C", "Modelo (opcional)": "B7R", "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 15.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": 134167.0, "Coincide?": false}, {"DiffCode": "RS1228C", "Modelo (opcional)": "B7R", "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 21.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": 134168.0, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "R1228B", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 15.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}, {"DiffCode": "RSS1035C", "Modelo (opcional)": NaN, "Pais/Mercado (opcional)": NaN, "OilSpecCode": 85136280, "Viscosidad": "75w90", "Litros": 15.0, "SKU (opcional)": NaN, "Prioridad": NaN, "Notas": "SINTETICO", "Desde CH": NaN, "Hasta CH": NaN, "Coincide?": false}];
+
+  function uniqueValues(arr, key) {
+    const set = new Set();
+    arr.forEach(r => {
+      const v = r[key];
+      if (v !== null && v !== undefined && String(v).trim() !== "") {
+        set.add(String(v).trim());
+      }
+    });
+    return Array.from(set).sort();
+  }
+
+  function fillSelect(sel, values, includeEmpty=true) {
+    sel.innerHTML = "";
+    if (includeEmpty) {
+      const opt = document.createElement('option');
+      opt.value = "";
+      opt.textContent = "-- seleccionar --";
+      sel.appendChild(opt);
+    }
+    values.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  }
+
+  function initCombos() {
+    const selModelo = document.getElementById('modelo');
+    const selPrefijo = document.getElementById('prefijoMotor');
+    const selCaja = document.getElementById('caja');
+    const selDif = document.getElementById('diferencial');
+
+    const modelos = uniqueValues(RULES_MOTOR, "Modelo");
+    const motoresOPrefijos = uniqueValues(RULES_MOTOR, "EngineFamily")
+      .concat(uniqueValues(RULES_MOTOR, "ChassisPrefix"))
+      .filter((v, idx, self) => self.indexOf(v) === idx);
+    const cajas = uniqueValues(RULES_CAJA, "CajaCode");
+    const difs = uniqueValues(RULES_DIF, "DiffCode");
+
+    fillSelect(selModelo, modelos);
+    fillSelect(selPrefijo, motoresOPrefijos);
+    fillSelect(selCaja, cajas);
+    fillSelect(selDif, difs);
+  }
+
+  function matchesMotor(rule, modelo, filtro2, chasis) {
+    const modelOk = (rule.Modelo === modelo) || (rule.Modelo === "*");
+    const engine = rule.EngineFamily && String(rule.EngineFamily).trim() !== "" ? String(rule.EngineFamily).trim() : null;
+    const prefix = rule.ChassisPrefix && String(rule.ChassisPrefix).trim() !== "" ? String(rule.ChassisPrefix).trim() : null;
+
+    let filtroOK = false;
+    if (!filtro2) {
+      filtroOK = true;
+    } else if (engine) {
+      filtroOK = (engine === filtro2);
+    } else if (prefix) {
+      filtroOK = (prefix === filtro2) || (prefix === "*");
+    } else {
+      filtroOK = true;
+    }
+
+    const fromOk = (rule.ChNum_Desde === null || isNaN(rule.ChNum_Desde)) ? true : (chasis >= rule.ChNum_Desde);
+    const toOk = (rule.ChNum_Hasta === null || isNaN(rule.ChNum_Hasta)) ? true : (chasis <= rule.ChNum_Hasta);
+
+    return modelOk && filtroOK && fromOk && toOk;
+  }
+
+  function matchesCaja(rule, modelo, cajaCode, chasis) {
+    if (!cajaCode) return false;
+    if (String(rule.CajaCode).trim() !== cajaCode) return false;
+
+    const modelOk = (!rule["Modelo (opcional)"] || String(rule["Modelo (opcional)"]).trim() === "" || String(rule["Modelo (opcional)"]).trim() === modelo);
+    const fromOk = (rule["Desde CH"] === null || isNaN(rule["Desde CH"])) ? true : (chasis >= rule["Desde CH"]);
+    const toOk = (rule["Hasta ch"] === null || isNaN(rule["Hasta ch"])) ? true : (chasis <= rule["Hasta ch"]);
+    return modelOk && fromOk && toOk;
+  }
+
+  function matchesDif(rule, modelo, difCode, chasis) {
+    if (!difCode) return false;
+    if (String(rule.DiffCode).trim() !== difCode) return false;
+
+    const modelOk = (!rule.Modelo || String(rule.Modelo).trim() === "" || String(rule.Modelo).trim() === modelo);
+    const fromOk = (rule["Desde CH"] === null || isNaN(rule["Desde CH"])) ? true : (chasis >= rule["Desde CH"]);
+    const toOk = (rule["Hasta CH"] === null || isNaN(rule["Hasta CH"])) ? true : (chasis <= rule["Hasta CH"]);
+    return modelOk && fromOk && toOk;
+  }
+
+  function firstMatching(rules, fn) {
+    for (let i = 0; i < rules.length; i++) {
+      if (fn(rules[i])) return rules[i];
+    }
+    return null;
+  }
+
+  function buscar() {
+    const modelo = document.getElementById('modelo').value;
+    const filtro2 = document.getElementById('prefijoMotor').value;
+    const chasisVal = document.getElementById('chasis').value;
+    const cajaCode = document.getElementById('caja').value;
+    const difCode = document.getElementById('diferencial').value;
+
+    const chasis = chasisVal ? parseInt(chasisVal, 10) : 0;
+
+    const motRule = firstMatching(RULES_MOTOR, r => matchesMotor(r, modelo, filtro2, chasis));
+    document.getElementById('motSpec').textContent = motRule ? (motRule.OilSpecCode || "") : "";
+    document.getElementById('motVisc').textContent = motRule ? (motRule.Viscosidad || "") : "";
+    document.getElementById('motLit').textContent = motRule ? (motRule.Litros || "") : "";
+
+    const cajaRule = firstMatching(RULES_CAJA, r => matchesCaja(r, modelo, cajaCode, chasis));
+    document.getElementById('cajaSpec').textContent = cajaRule ? (cajaRule.OilSpecCode || "") : "";
+    document.getElementById('cajaVisc').textContent = cajaRule ? (cajaRule.Viscosidad || "") : "";
+    document.getElementById('cajaLit').textContent = cajaRule ? (cajaRule.Litros || "") : "";
+
+    const difRule = firstMatching(RULES_DIF, r => matchesDif(r, modelo, difCode, chasis));
+    document.getElementById('difSpec').textContent = difRule ? (difRule.OilSpecCode || "") : "";
+    document.getElementById('difVisc').textContent = difRule ? (difRule.Viscosidad || "") : "";
+    document.getElementById('difLit').textContent = difRule ? (difRule.Litros || "") : "";
+  }
+
+  function limpiar() {
+    document.getElementById('modelo').value = "";
+    document.getElementById('prefijoMotor').value = "";
+    document.getElementById('chasis').value = "";
+    document.getElementById('caja').value = "";
+    document.getElementById('diferencial').value = "";
+
+    document.getElementById('motSpec').textContent = "";
+    document.getElementById('motVisc').textContent = "";
+    document.getElementById('motLit').textContent = "";
+    document.getElementById('cajaSpec').textContent = "";
+    document.getElementById('cajaVisc').textContent = "";
+    document.getElementById('cajaLit').textContent = "";
+    document.getElementById('difSpec').textContent = "";
+    document.getElementById('difVisc').textContent = "";
+    document.getElementById('difLit').textContent = "";
+  }
+
+  document.addEventListener('DOMContentLoaded', initCombos);
+</script>
+</body>
+</html>
